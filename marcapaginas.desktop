@@ -1,0 +1,29 @@
+[Desktop Entry]
+Type=Service
+MimeType=image/png;image/jpeg;image/gif;
+X-KDE-Submenu=Marcapaginas
+X-KDE-Submenu[ca]=Marcapagines
+X-KDE-MinNumbersOfUrls=1
+X-KDE-ServiceTypes=KonqPopupMenu/Plugin
+Actions=flor;simple;fondo;
+
+[Desktop Action flor]
+Name=Flor
+Name[es]=Flor
+Name[ca]=Flor
+Icon=package-available
+Exec=/usr/bin/marcapaginas -m flor %U;
+
+[Desktop Action simple]
+Name=Simple
+Name[es]=Simple
+Name[ca]=Simple
+Icon=package-available
+Exec=/usr/bin/marcapaginas -m simple %U;
+
+[Desktop Action fondo]
+Name=Fondo
+Name[es]=Fondo
+Name[ca]=Fondo
+Icon=package-available
+Exec=/usr/bin/marcapaginas -m fondo %U;

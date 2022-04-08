@@ -1,0 +1,181 @@
+#!/usr/bin/env python3
+import sys
+import subprocess
+import os
+import re
+import tempfile
+import shutil
+
+RESOURCE_DIR='/usr/lib/marcapaginas/resources/marcapaginas'
+
+mode=''
+text=''
+imgs=[]
+
+def help(exitcode=0):
+    print()
+    print(f'{os.path.basename(sys.argv[0])} -m <MODE> [-t "text or title"] file1 ... [fileN]')
+    print(f"{os.path.basename(sys.argv[0])} -h")
+    print()
+    t=[]
+    t='|'.join(os.listdir(f'{RESOURCE_DIR}'))
+    print(f"<MODE> = [{t}]")
+    print('')
+    print()
+    sys.exit(exitcode)
+
+def parse_parameters():
+    global mode, template, imgs
+    try:
+        narg = 0
+        while narg < len(sys.argv)-1:
+            narg += 1
+            param = sys.argv[narg]
+            if param == "-m":
+                if narg+1 < len(sys.argv):
+                    mode = sys.argv[narg+1]
+                    narg += 1
+                else:
+                    raise Exception('No mode selected')
+            elif param == "-t":
+                if narg+1 < len(sys.argv):
+                    text = sys.argv[narg+1]
+                    narg += 1
+            else:
+                if param == '-h':
+                    help()
+                param=os.path.realpath(param)
+                if os.path.isfile(param):
+                    if len(imgs) < 3:
+                        imgs.append(param)
+                else:
+                    raise Exception(f'{param} not exists')
+    except Exception as e:
+        print(f'{e}')
+        help(1)
+
+def image_size(imgname):
+    magic = subprocess.check_output(['/usr/bin/identify',imgname]).decode()
+    size = magic.split(' ')[2]
+    try:
+        sizes = re.findall('(\d+)[ ]?x[ ]?(\d+)', size)[0]
+        if size != '{}x{}'.format(sizes[0],sizes[1]):
+            raise Exception('Unknown image size')
+        return (sizes[0],sizes[1])
+    except Exception as e:
+        print(f'{e}')
+        sys.exit(1)
+
+def resize(imgname):
+    os.chdir(os.path.dirname(imgname))
+    subprocess.check_call(['/usr/bin/convert',imgname,'-alpha','remove','-resize','400',imgname])
+
+def rotate_image(imgname):
+    os.chdir(os.path.dirname(imgname))
+    subprocess.check_call(['/usr/bin/convert',imgname,'-alpha','remove','-rotate','270',imgname])
+
+def make_square(imgname):
+    os.chdir(os.path.dirname(imgname))
+    subprocess.check_call(['/usr/bin/convert',imgname,'-background','white','-trim','+repage',imgname])
+    x,y=image_size(imgname)
+    if x > y:
+        subprocess.check_call(['/usr/bin/mogrify','-gravity','center','-background','white','-extent',f'{x}x{x}',imgname])
+    if y > x:
+        subprocess.check_call(['/usr/bin/mogrify','-gravity','center','-background','white','-extent',f'{y}x{y}',imgname])
+
+def replace_text(text,file):
+    if not text:
+        text=''
+    os.chdir(os.path.dirname(file))
+    parts = text.split(' ')[:5]
+    if len(parts) < 5:
+        while len(parts) != 5:
+            parts.append('')
+    a,b,c,d,e = tuple(parts)
+    subprocess.check_call(['/usr/bin/sed','-r','-i','-e',f's|@@1@@|{a}|g','-e',f's|@@2@@|{b}|g','-e',f's|@@3@@|{c}|g','-e',f's|@@4@@|{d}|g','-e',f's|@@5@@|{e}|g', file])
+
+def ask(default_name):
+    try:
+        if default_name:
+            default_name=os.path.basename(default_name)
+        else:
+            return None
+        return subprocess.check_output(['/usr/bin/kdialog','--getsavefilename',f'{os.path.expanduser("~")}/{default_name}','application/pdf']).decode().strip()
+    except Exception as e:
+        return None
+
+def ask_open(filename):
+    try:
+        subprocess.check_call(['/usr/bin/kdialog','--yesno',f' Open {filename} ?','--title',os.path.basename(sys.argv[0])])
+        return True
+    except:
+        return False
+
+def ask_text():
+    try:
+        name = subprocess.check_output(['/usr/bin/kdialog','--inputbox',' Name for bookmark ?','--title',os.path.basename(sys.argv[0])]).decode().strip()
+        return name
+    except:
+        return ''
+
+# MAIN PROGRAM
+
+if __name__ == "__main__":
+    parse_parameters()
+    if not mode or not imgs:
+        print('Wrong parameters')
+        help(1)
+    directory = f'{RESOURCE_DIR}/{mode}'
+    template_name = 'plantilla.svg'
+    if not os.path.isdir(directory):
+        print('Wrong mode')
+        help(1)
+    if not os.path.isfile(f'{directory}/{template_name}'):
+        print('Template {template_name} not found!')
+        help(1)
+
+    out_pdf=''
+    out_png=''
+    pdfs=[]
+    with tempfile.TemporaryDirectory() as dirname:
+        file_template=f'{dirname}/{template_name}'
+        shutil.copy(f'{directory}/{template_name}',file_template)
+        n=-1
+        imagename='1.jpg'
+        for img in imgs:
+            n+=1
+            num=''
+            if len(imgs) > 1:
+                num=str(n+1)+'_'
+            file_pdf=f'{dirname}/{num}{template_name.replace(".svg",".pdf")}'
+            file_png=f'{dirname}/{num}{template_name.replace(".svg",".png")}'
+            newfile=f'{dirname}/{imagename}'
+            shutil.copy(img,newfile)
+            x,y=image_size(newfile)
+            if x not in range(500) and y not in range(500):
+                resize(newfile)
+            if mode == 'fondo':
+                x,y=image_size(newfile)
+                if y > x:
+                    rotate_image(newfile)
+            make_square(newfile)
+            os.chdir(dirname)
+            if mode == 'simple':
+                text = ask_text()
+                replace_text(text,file_template)
+
+            subprocess.check_call(['/usr/bin/rsvg-convert',file_template,'-f','png','-b','white','-o',file_png])
+            subprocess.check_call(['/usr/bin/rsvg-convert',file_template,'-f','pdf','-b','white','-o',file_pdf])
+            output = ask(f'{sys.argv[0]}_{num}{mode}.pdf')
+            if output:
+                out_png=f'{os.path.dirname(output)}/{os.path.basename(output).replace(".pdf",".png")}'
+                out_pdf=f'{os.path.dirname(output)}/{os.path.basename(output).replace(".pdf",".pdf")}'
+                shutil.copy(file_png,out_png)
+                shutil.copy(file_pdf,out_pdf)
+                pdfs.append(out_pdf)
+            else:
+                sys.exit(0)
+    for pdf in pdfs:
+        if ask_open(pdf):
+            subprocess.Popen(['/usr/bin/okular',pdf],stderr=subprocess.DEVNULL)
+    sys.exit(0)
