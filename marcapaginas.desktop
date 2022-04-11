@@ -24,6 +24,6 @@ Exec=/usr/bin/marcapaginas -m simple %U;
 [Desktop Action fondo]
 Name=Fondo
 Name[es]=Fondo
-Name[ca]=Fondo
+Name[ca]=Fons
 Icon=package-available
 Exec=/usr/bin/marcapaginas -m fondo %U;
