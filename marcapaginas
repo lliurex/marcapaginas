@@ -61,7 +61,7 @@ def image_size(imgname):
         sizes = re.findall('(\d+)[ ]?x[ ]?(\d+)', size)[0]
         if size != '{}x{}'.format(sizes[0],sizes[1]):
             raise Exception('Unknown image size')
-        return (sizes[0],sizes[1])
+        return (int(sizes[0]),int(sizes[1]))
     except Exception as e:
         print(f'{e}')
         sys.exit(1)
