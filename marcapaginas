@@ -25,7 +25,7 @@ def help(exitcode=0):
     sys.exit(exitcode)
 
 def parse_parameters():
-    global mode, template, imgs
+    global mode, text, imgs
     try:
         narg = 0
         while narg < len(sys.argv)-1:
