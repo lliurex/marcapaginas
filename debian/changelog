@@ -1,3 +1,9 @@
+marcapaginas (0.2.1) focal; urgency=medium
+
+  * fix policy
+
+ -- M.Angel Juan <m.angel.juan@gmail.com>  Thu, 21 Apr 2022 12:58:40 +0200
+
 marcapaginas (0.2) focal; urgency=medium
 
   * Fix convert policy
