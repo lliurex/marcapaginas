@@ -5,6 +5,17 @@ import os
 import re
 import tempfile
 import shutil
+import locale
+import gettext
+
+try:
+    translation = gettext.translation('marcapaginas',localedir='/usr/share/locale')
+    if translation:
+        translation.install()
+        _ = translation.gettext
+except FileNotFoundError:
+    print('No translation found!')
+    _ = lambda x: x
 
 RESOURCE_DIR='/usr/lib/marcapaginas/resources/marcapaginas'
 
@@ -36,7 +47,7 @@ def parse_parameters():
                     mode = sys.argv[narg+1]
                     narg += 1
                 else:
-                    raise Exception('No mode selected')
+                    raise Exception(_('No mode selected'))
             elif param == "-t":
                 if narg+1 < len(sys.argv):
                     text = sys.argv[narg+1]
@@ -49,7 +60,7 @@ def parse_parameters():
                     if len(imgs) < 3:
                         imgs.append(param)
                 else:
-                    raise Exception(f'{param} not exists')
+                    raise Exception(_('{} not exists').format(param))
     except Exception as e:
         print(f'{e}')
         help(1)
@@ -60,7 +71,7 @@ def image_size(imgname):
     try:
         sizes = re.findall('(\d+)[ ]?x[ ]?(\d+)', size)[0]
         if size != '{}x{}'.format(sizes[0],sizes[1]):
-            raise Exception('Unknown image size')
+            raise Exception(_('Unknown image size'))
         return (int(sizes[0]),int(sizes[1]))
     except Exception as e:
         print(f'{e}')
@@ -96,24 +107,22 @@ def replace_text(text,file):
 
 def ask(default_name):
     try:
-        if default_name:
-            default_name=os.path.basename(default_name)
-        else:
+        if not default_name:
             return None
-        return subprocess.check_output(['/usr/bin/kdialog','--getsavefilename',f'{os.path.expanduser("~")}/{default_name}','application/pdf']).decode().strip()
+        return subprocess.check_output(['/usr/bin/kdialog','--getsavefilename',default_name,'application/pdf']).decode().strip()
     except Exception as e:
         return None
 
 def ask_open(filename):
     try:
-        subprocess.check_call(['/usr/bin/kdialog','--yesno',f' Open {filename} ?','--title',os.path.basename(sys.argv[0])])
+        subprocess.check_call(['/usr/bin/kdialog','--yesno',_(' Open {} ?').format(filename),'--title',os.path.basename(sys.argv[0])])
         return True
     except:
         return False
 
 def ask_text():
     try:
-        name = subprocess.check_output(['/usr/bin/kdialog','--inputbox',' Name for bookmark ?','--title',os.path.basename(sys.argv[0])]).decode().strip()
+        name = subprocess.check_output(['/usr/bin/kdialog','--inputbox',_(' Name for bookmark ?'),'--title',os.path.basename(sys.argv[0])]).decode().strip()
         return name
     except:
         return ''
@@ -123,15 +132,15 @@ def ask_text():
 if __name__ == "__main__":
     parse_parameters()
     if not mode or not imgs:
-        print('Wrong parameters')
+        print(_('Wrong parameters'))
         help(1)
     directory = f'{RESOURCE_DIR}/{mode}'
     template_name = 'plantilla.svg'
     if not os.path.isdir(directory):
-        print('Wrong mode')
+        print(_('Wrong mode'))
         help(1)
     if not os.path.isfile(f'{directory}/{template_name}'):
-        print('Template {template_name} not found!')
+        print(_('Template {} not found!').format(template_name))
         help(1)
 
     out_pdf=''
@@ -166,7 +175,11 @@ if __name__ == "__main__":
 
             subprocess.check_call(['/usr/bin/rsvg-convert',file_template,'-f','png','-b','white','-o',file_png])
             subprocess.check_call(['/usr/bin/rsvg-convert',file_template,'-f','pdf','-b','white','-o',file_pdf])
-            output = ask(f'{sys.argv[0]}_{num}{mode}.pdf')
+            if imgs:
+                basename = os.path.dirname(os.path.realpath(imgs[0]))
+            else:
+                basename = os.path.expanduser('~')
+            output = ask(f'{basename}/{os.path.basename(sys.argv[0])}_{num}{mode}.pdf')
             if output:
                 out_png=f'{os.path.dirname(output)}/{os.path.basename(output).replace(".pdf",".png")}'
                 out_pdf=f'{os.path.dirname(output)}/{os.path.basename(output).replace(".pdf",".pdf")}'
