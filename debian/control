@@ -1,0 +1,20 @@
+Source: marcapaginas
+Section: graphics
+Priority: optional
+Maintainer: M.Angel Juan <m.angel.juan@gmail.com>
+Build-Depends: debhelper-compat (= 12)
+Standards-Version: 4.4.1
+Homepage: https://github.com/lliurex/marcapaginas
+
+Package: marcapaginas
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, librsvg2-bin, python3, imagemagick-6.q16
+Description: Make pdf framed with decorations
+ Make custom pdf with custom bookmarks intended for use in school
+
+Package: marcapaginas-kde-servicemenu
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, marcapaginas
+Description: Dolphin service menu for marcapaginas
+ Service menu with pdf framed decoration actions
+

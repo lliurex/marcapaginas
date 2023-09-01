@@ -1,0 +1,24 @@
+marcapaginas (0.2.2) focal; urgency=medium
+
+  * Add translation system
+  * Changed default savepath
+
+ -- M.Angel Juan <m.angel.juan@gmail.com>  Fri, 20 May 2022 13:40:51 +0200
+
+marcapaginas (0.2.1) focal; urgency=medium
+
+  * fix policy
+
+ -- M.Angel Juan <m.angel.juan@gmail.com>  Thu, 21 Apr 2022 12:58:40 +0200
+
+marcapaginas (0.2) focal; urgency=medium
+
+  * Fix convert policy
+
+ -- M.Angel Juan <m.angel.juan@gmail.com>  Tue, 12 Apr 2022 12:09:36 +0200
+
+marcapaginas (0.1) focal; urgency=medium
+
+  * Initial Release.
+
+ -- M.Angel Juan <m.angel.juan@gmail.com>  Fri, 08 Apr 2022 11:55:13 +0200
