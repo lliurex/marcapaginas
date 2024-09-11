@@ -20,7 +20,7 @@ set -e
 
 case "$1" in
     configure)
-	kbuildsycoca5 >/dev/null 2>&1 || true
+	kbuildsycoca6 >/dev/null 2>&1 || true
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
