@@ -69,7 +69,7 @@ def image_size(imgname):
     magic = subprocess.check_output(['/usr/bin/identify',imgname]).decode()
     size = magic.split(' ')[2]
     try:
-        sizes = re.findall('(\d+)[ ]?x[ ]?(\d+)', size)[0]
+        sizes = re.findall(r'(\d+)[ ]?x[ ]?(\d+)', size)[0]
         if size != '{}x{}'.format(sizes[0],sizes[1]):
             raise Exception(_('Unknown image size'))
         return (int(sizes[0]),int(sizes[1]))
